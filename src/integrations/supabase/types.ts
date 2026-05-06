@@ -22,6 +22,8 @@ export type Database = {
           id: string
           last_name: string
           more_details: string | null
+          product_id: string | null
+          product_name: string | null
           status: string
         }
         Insert: {
@@ -31,6 +33,8 @@ export type Database = {
           id?: string
           last_name: string
           more_details?: string | null
+          product_id?: string | null
+          product_name?: string | null
           status?: string
         }
         Update: {
@@ -40,9 +44,19 @@ export type Database = {
           id?: string
           last_name?: string
           more_details?: string | null
+          product_id?: string | null
+          product_name?: string | null
           status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
