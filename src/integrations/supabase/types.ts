@@ -22,6 +22,8 @@ export type Database = {
           id: string
           last_name: string
           more_details: string | null
+          product_id: string | null
+          product_name: string | null
           status: string
         }
         Insert: {
@@ -31,6 +33,8 @@ export type Database = {
           id?: string
           last_name: string
           more_details?: string | null
+          product_id?: string | null
+          product_name?: string | null
           status?: string
         }
         Update: {
@@ -40,7 +44,71 @@ export type Database = {
           id?: string
           last_name?: string
           more_details?: string | null
+          product_id?: string | null
+          product_name?: string | null
           status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
+      suggestions: {
+        Row: {
+          created_at: string
+          description: string | null
+          fidget_name: string
+          id: string
+          submitter_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          fidget_name: string
+          id?: string
+          submitter_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          fidget_name?: string
+          id?: string
+          submitter_name?: string | null
         }
         Relationships: []
       }
