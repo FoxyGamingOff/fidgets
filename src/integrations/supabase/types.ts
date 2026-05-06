@@ -44,6 +44,60 @@ export type Database = {
         }
         Relationships: []
       }
+      products: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
+      suggestions: {
+        Row: {
+          created_at: string
+          description: string | null
+          fidget_name: string
+          id: string
+          submitter_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          fidget_name: string
+          id?: string
+          submitter_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          fidget_name?: string
+          id?: string
+          submitter_name?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
