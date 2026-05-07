@@ -124,7 +124,7 @@ function Index() {
       <Toaster theme="dark" position="top-center" />
       <header className="absolute top-0 right-0 p-6 z-10 flex items-center gap-4">
         <a href="#cart" className="text-sm text-muted-foreground hover:text-primary transition">
-          🛒 Panier {itemCount > 0 && <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-primary text-primary-foreground">{itemCount}</span>}
+          Panier {itemCount > 0 && <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-primary text-primary-foreground">{itemCount}</span>}
         </a>
         <Link to="/admin" className="text-sm text-muted-foreground hover:text-primary transition">Admin</Link>
       </header>
@@ -186,7 +186,7 @@ function Index() {
             ) : (
               <form onSubmit={submit} className="space-y-5">
                 <div>
-                  <h2 className="text-2xl font-bold mb-1">🛒 Panier</h2>
+                  <h2 className="text-2xl font-bold mb-1">Panier</h2>
                   <p className="text-sm text-muted-foreground">Vérifie ta commande puis remplis le formulaire.</p>
                 </div>
 
