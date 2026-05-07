@@ -15,7 +15,7 @@ export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
-      { title: "Fidgets — Jouets 3D imprimés" },
+      { title: "​Description — Jouets 3D imprimés" },
       { name: "description", content: "Commande des fidgets imprimés en 3D. Aucun paiement en ligne — règle sur place." },
     ],
   }),
@@ -137,7 +137,7 @@ function Index() {
           </div>
           <h1 className="text-5xl lg:text-7xl font-bold leading-tight tracking-tight mb-6">
             <span className="bg-clip-text text-transparent" style={{ backgroundImage: "var(--gradient-hero)" }}>
-              Fidgets
+              ​Description
             </span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-md mx-auto">
