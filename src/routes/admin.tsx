@@ -13,7 +13,7 @@ import type { Session } from "@supabase/supabase-js";
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
-  head: () => ({ meta: [{ title: "Admin — Fidgets" }] }),
+  head: () => ({ meta: [{ title: "Admin — ​Description" }] }),
 });
 
 type Order = { id: string; first_name: string; last_name: string; class_group: string; more_details: string | null; status: string; created_at: string; product_name: string | null };
@@ -185,7 +185,7 @@ function AdminPage() {
         <Tabs defaultValue="orders">
           <TabsList>
             <TabsTrigger value="orders">Commandes ({orders.length})</TabsTrigger>
-            <TabsTrigger value="products">Fidgets ({products.length})</TabsTrigger>
+            <TabsTrigger value="products">​Description ({products.length})</TabsTrigger>
             <TabsTrigger value="suggestions">Suggestions ({suggestions.length})</TabsTrigger>
           </TabsList>
 
@@ -217,7 +217,7 @@ function AdminPage() {
 
           <TabsContent value="products" className="space-y-6 mt-6">
             <Card className="p-6 bg-card border-border">
-              <h2 className="text-lg font-semibold mb-4">Ajouter un fidget</h2>
+              <h2 className="text-lg font-semibold mb-4">Ajouter un objet</h2>
               <form onSubmit={addProduct} className="grid sm:grid-cols-2 gap-4">
                 <div><Label htmlFor="pn">Nom</Label><Input id="pn" value={np.name} onChange={(e) => setNp({ ...np, name: e.target.value })} maxLength={80} required /></div>
                 <div><Label htmlFor="pp">Prix ($)</Label><Input id="pp" type="number" step="0.01" min="0" value={np.price} onChange={(e) => setNp({ ...np, price: e.target.value })} required /></div>
