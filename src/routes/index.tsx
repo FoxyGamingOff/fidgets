@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,8 @@ type Product = {
   description: string | null;
 };
 
+type CartItem = { product: Product; qty: number };
+
 const orderSchema = z.object({
   first_name: z.string().trim().min(1, "Prénom requis").max(60),
   last_name: z.string().trim().min(1, "Nom requis").max(60),
@@ -44,7 +46,7 @@ const suggestionSchema = z.object({
 
 function Index() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [selected, setSelected] = useState<Product | null>(null);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [form, setForm] = useState({ first_name: "", last_name: "", class_group: "", more_details: "" });
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -59,24 +61,46 @@ function Index() {
     });
   }, []);
 
+  const total = useMemo(() => cart.reduce((s, i) => s + Number(i.product.price) * i.qty, 0), [cart]);
+  const itemCount = useMemo(() => cart.reduce((s, i) => s + i.qty, 0), [cart]);
+
+  function addToCart(p: Product) {
+    setCart((c) => {
+      const ex = c.find((i) => i.product.id === p.id);
+      if (ex) return c.map((i) => (i.product.id === p.id ? { ...i, qty: i.qty + 1 } : i));
+      return [...c, { product: p, qty: 1 }];
+    });
+    toast.success(`${p.name} ajouté au panier`);
+  }
+  function setQty(id: string, qty: number) {
+    if (qty <= 0) return setCart((c) => c.filter((i) => i.product.id !== id));
+    setCart((c) => c.map((i) => (i.product.id === id ? { ...i, qty } : i)));
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selected) { toast.error("Choisis un fidget"); return; }
+    if (cart.length === 0) { toast.error("Ton panier est vide"); return; }
     const parsed = orderSchema.safeParse(form);
     if (!parsed.success) { toast.error(parsed.error.issues[0].message); return; }
     setLoading(true);
+
+    const summary = cart.map((i) => `${i.qty}× ${i.product.name} (${(Number(i.product.price) * i.qty).toFixed(2)} $)`).join("\n");
+    const fullDetails = `Panier:\n${summary}\nTotal: ${total.toFixed(2)} $${parsed.data.more_details ? `\n\nNote:\n${parsed.data.more_details}` : ""}`;
+    const productNames = cart.map((i) => `${i.qty}× ${i.product.name}`).join(", ");
+
     const { error } = await supabase.from("orders").insert({
       first_name: parsed.data.first_name,
       last_name: parsed.data.last_name,
       class_group: parsed.data.class_group,
-      more_details: parsed.data.more_details || null,
-      product_id: selected.id,
-      product_name: selected.name,
+      more_details: fullDetails,
+      product_id: cart[0].product.id,
+      product_name: productNames,
     });
     setLoading(false);
     if (error) { toast.error("Erreur. Réessaie."); return; }
     setDone(true);
     setForm({ first_name: "", last_name: "", class_group: "", more_details: "" });
+    setCart([]);
   }
 
   async function submitSuggestion(e: React.FormEvent) {
@@ -98,7 +122,10 @@ function Index() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Toaster theme="dark" position="top-center" />
-      <header className="absolute top-0 right-0 p-6 z-10">
+      <header className="absolute top-0 right-0 p-6 z-10 flex items-center gap-4">
+        <a href="#cart" className="text-sm text-muted-foreground hover:text-primary transition">
+          🛒 Panier {itemCount > 0 && <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-primary text-primary-foreground">{itemCount}</span>}
+        </a>
         <Link to="/admin" className="text-sm text-muted-foreground hover:text-primary transition">Admin</Link>
       </header>
 
@@ -114,7 +141,7 @@ function Index() {
             </span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-md mx-auto">
-            Choisis un fidget, place ta commande, règle sur place.
+            Ajoute des fidgets au panier, place ta commande, règle sur place.
           </p>
         </section>
 
@@ -126,9 +153,9 @@ function Index() {
           )}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((p) => {
-              const isSelected = selected?.id === p.id;
+              const inCart = cart.find((i) => i.product.id === p.id);
               return (
-                <Card key={p.id} className={`p-4 bg-card border-border transition cursor-pointer ${isSelected ? "ring-2 ring-primary" : "hover:border-primary/50"}`} onClick={() => { setSelected(p); setDone(false); document.getElementById("order-form")?.scrollIntoView({ behavior: "smooth" }); }}>
+                <Card key={p.id} className="p-4 bg-card border-border transition hover:border-primary/50">
                   <div className="aspect-square rounded-lg overflow-hidden mb-4 bg-muted">
                     <img src={p.image_url || toyImage} alt={p.name} className="w-full h-full object-cover" />
                   </div>
@@ -137,8 +164,8 @@ function Index() {
                     <span className="font-bold whitespace-nowrap" style={{ background: "var(--gradient-hero)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{Number(p.price).toFixed(2)} $</span>
                   </div>
                   {p.description && <p className="text-sm text-muted-foreground">{p.description}</p>}
-                  <Button size="sm" variant={isSelected ? "default" : "outline"} className="w-full mt-4">
-                    {isSelected ? "Sélectionné ✓" : "Commander"}
+                  <Button size="sm" onClick={() => addToCart(p)} className="w-full mt-4" style={{ background: "var(--gradient-hero)", color: "oklch(0.97 0.01 300)" }}>
+                    {inCart ? `Ajouter encore (${inCart.qty})` : "Ajouter au panier"}
                   </Button>
                 </Card>
               );
@@ -146,24 +173,54 @@ function Index() {
           </div>
         </section>
 
-        {/* Order Form */}
-        <section id="order-form" className="grid lg:grid-cols-2 gap-10 mb-20">
+        {/* Cart + Order Form */}
+        <section id="cart" className="grid lg:grid-cols-2 gap-10 mb-20">
           <Card className="p-8 bg-card border-border">
             {done ? (
               <div className="text-center py-12">
                 <div className="text-5xl mb-4">✨</div>
                 <h2 className="text-2xl font-bold mb-2">Commande reçue !</h2>
                 <p className="text-muted-foreground mb-6">On te contacte bientôt pour la livraison.</p>
-                <Button onClick={() => { setDone(false); setSelected(null); }} variant="outline">Nouvelle commande</Button>
+                <Button onClick={() => setDone(false)} variant="outline">Nouvelle commande</Button>
               </div>
             ) : (
               <form onSubmit={submit} className="space-y-5">
                 <div>
-                  <h2 className="text-2xl font-bold mb-1">Passer une commande</h2>
-                  <p className="text-sm text-muted-foreground">
-                    {selected ? <>Fidget choisi : <span className="text-primary font-semibold">{selected.name}</span></> : "Choisis un fidget dans le catalogue ci-dessus."}
-                  </p>
+                  <h2 className="text-2xl font-bold mb-1">🛒 Panier</h2>
+                  <p className="text-sm text-muted-foreground">Vérifie ta commande puis remplis le formulaire.</p>
                 </div>
+
+                <div className="space-y-2 border border-border rounded-lg p-3 bg-background/40">
+                  {cart.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">Panier vide. Ajoute des fidgets ci-dessus.</p>
+                  ) : (
+                    <>
+                      {cart.map((i) => (
+                        <div key={i.product.id} className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded bg-muted overflow-hidden shrink-0">
+                            <img src={i.product.image_url || toyImage} alt={i.product.name} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{i.product.name}</p>
+                            <p className="text-xs text-muted-foreground">{Number(i.product.price).toFixed(2)} $ × {i.qty}</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button type="button" size="sm" variant="outline" className="h-7 w-7 p-0" onClick={() => setQty(i.product.id, i.qty - 1)}>−</Button>
+                            <span className="w-6 text-center text-sm">{i.qty}</span>
+                            <Button type="button" size="sm" variant="outline" className="h-7 w-7 p-0" onClick={() => setQty(i.product.id, i.qty + 1)}>+</Button>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="border-t border-border pt-2 mt-2 flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Total</span>
+                        <span className="text-xl font-bold" style={{ background: "var(--gradient-hero)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                          {total.toFixed(2)} $
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label htmlFor="fn">Prénom</Label>
@@ -180,10 +237,10 @@ function Index() {
                 </div>
                 <div>
                   <Label htmlFor="md">Plus de détails</Label>
-                  <Textarea id="md" placeholder="Quantité, couleur préférée, etc." value={form.more_details} onChange={(e) => setForm({ ...form, more_details: e.target.value })} maxLength={500} rows={4} />
+                  <Textarea id="md" placeholder="Couleur préférée, etc." value={form.more_details} onChange={(e) => setForm({ ...form, more_details: e.target.value })} maxLength={500} rows={3} />
                 </div>
-                <Button type="submit" disabled={loading || !selected} className="w-full text-base py-6" style={{ background: "var(--gradient-hero)", color: "oklch(0.97 0.01 300)" }}>
-                  {loading ? "Envoi..." : "Confirmer la commande"}
+                <Button type="submit" disabled={loading || cart.length === 0} className="w-full text-base py-6" style={{ background: "var(--gradient-hero)", color: "oklch(0.97 0.01 300)" }}>
+                  {loading ? "Envoi..." : `Confirmer la commande — ${total.toFixed(2)} $`}
                 </Button>
               </form>
             )}
