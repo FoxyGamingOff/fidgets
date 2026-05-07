@@ -137,7 +137,7 @@ function Index() {
           </div>
           <h1 className="text-5xl lg:text-7xl font-bold leading-tight tracking-tight mb-6">
             <span className="bg-clip-text text-transparent" style={{ backgroundImage: "var(--gradient-hero)" }}>
-              ​Description
+              ​3D PRINTA
             </span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-md mx-auto">
