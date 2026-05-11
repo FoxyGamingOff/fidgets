@@ -81,8 +81,19 @@ function AdminPage() {
     if (error) return toast.error("Erreur");
     setOrders(orders.map(o => o.id === id ? { ...o, status: next } : o));
   }
-  async function removeOrder(id: string) {
-    if (!confirm("Supprimer cette commande ?")) return;
+  async function archiveOrder(id: string) {
+    if (!confirm("Archiver cette commande ? Elle restera dans l'historique.")) return;
+    const { error } = await supabase.from("orders").update({ status: "archived" }).eq("id", id);
+    if (error) return toast.error("Erreur");
+    setOrders(orders.map(o => o.id === id ? { ...o, status: "archived" } : o));
+  }
+  async function restoreOrder(id: string) {
+    const { error } = await supabase.from("orders").update({ status: "pending" }).eq("id", id);
+    if (error) return toast.error("Erreur");
+    setOrders(orders.map(o => o.id === id ? { ...o, status: "pending" } : o));
+  }
+  async function deleteOrderForever(id: string) {
+    if (!confirm("Supprimer DÉFINITIVEMENT cette commande ? Cette action est irréversible.")) return;
     const { error } = await supabase.from("orders").delete().eq("id", id);
     if (error) return toast.error("Erreur");
     setOrders(orders.filter(o => o.id !== id));
