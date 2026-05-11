@@ -81,8 +81,19 @@ function AdminPage() {
     if (error) return toast.error("Erreur");
     setOrders(orders.map(o => o.id === id ? { ...o, status: next } : o));
   }
-  async function removeOrder(id: string) {
-    if (!confirm("Supprimer cette commande ?")) return;
+  async function archiveOrder(id: string) {
+    if (!confirm("Archiver cette commande ? Elle restera dans l'historique.")) return;
+    const { error } = await supabase.from("orders").update({ status: "archived" }).eq("id", id);
+    if (error) return toast.error("Erreur");
+    setOrders(orders.map(o => o.id === id ? { ...o, status: "archived" } : o));
+  }
+  async function restoreOrder(id: string) {
+    const { error } = await supabase.from("orders").update({ status: "pending" }).eq("id", id);
+    if (error) return toast.error("Erreur");
+    setOrders(orders.map(o => o.id === id ? { ...o, status: "pending" } : o));
+  }
+  async function deleteOrderForever(id: string) {
+    if (!confirm("Supprimer DÉFINITIVEMENT cette commande ? Cette action est irréversible.")) return;
     const { error } = await supabase.from("orders").delete().eq("id", id);
     if (error) return toast.error("Erreur");
     setOrders(orders.filter(o => o.id !== id));
@@ -190,29 +201,68 @@ function AdminPage() {
           </TabsList>
 
           <TabsContent value="orders" className="space-y-3 mt-6">
-            {orders.length === 0 && <p className="text-muted-foreground text-center py-12">Aucune commande.</p>}
-            {orders.map(o => (
-              <Card key={o.id} className="p-5 bg-card border-border">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="flex-1 min-w-[200px]">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <h3 className="text-lg font-semibold">{o.first_name} {o.last_name}</h3>
-                      <span className="text-xs px-2 py-0.5 rounded-full border border-border text-muted-foreground">Groupe {o.class_group}</span>
-                      {o.product_name && <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">{o.product_name}</span>}
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${o.status === "fulfilled" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
-                        {o.status === "fulfilled" ? "Livrée" : "En attente"}
-                      </span>
-                    </div>
-                    {o.more_details && <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">{o.more_details}</p>}
-                    <p className="text-xs text-muted-foreground mt-2">{new Date(o.created_at).toLocaleString("fr-CA")}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => toggleStatus(o.id, o.status)}>{o.status === "pending" ? "Marquer livrée" : "Réouvrir"}</Button>
-                    <Button size="sm" variant="destructive" onClick={() => removeOrder(o.id)}>Suppr.</Button>
-                  </div>
-                </div>
-              </Card>
-            ))}
+            {(() => {
+              const active = orders.filter(o => o.status === "pending" || o.status === "fulfilled");
+              const history = orders.filter(o => o.status === "archived");
+              return (
+                <Tabs defaultValue="active">
+                  <TabsList>
+                    <TabsTrigger value="active">Actives ({active.length})</TabsTrigger>
+                    <TabsTrigger value="history">Historique ({history.length})</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="active" className="space-y-3 mt-4">
+                    {active.length === 0 && <p className="text-muted-foreground text-center py-12">Aucune commande active.</p>}
+                    {active.map(o => (
+                      <Card key={o.id} className="p-5 bg-card border-border">
+                        <div className="flex flex-wrap items-start justify-between gap-4">
+                          <div className="flex-1 min-w-[200px]">
+                            <div className="flex items-center gap-3 flex-wrap">
+                              <h3 className="text-lg font-semibold">{o.first_name} {o.last_name}</h3>
+                              <span className="text-xs px-2 py-0.5 rounded-full border border-border text-muted-foreground">Groupe {o.class_group}</span>
+                              {o.product_name && <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">{o.product_name}</span>}
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${o.status === "fulfilled" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+                                {o.status === "fulfilled" ? "Livrée" : "En attente"}
+                              </span>
+                            </div>
+                            {o.more_details && <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">{o.more_details}</p>}
+                            <p className="text-xs text-muted-foreground mt-2">{new Date(o.created_at).toLocaleString("fr-CA")}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={() => toggleStatus(o.id, o.status)}>{o.status === "pending" ? "Marquer livrée" : "Réouvrir"}</Button>
+                            <Button size="sm" variant="destructive" onClick={() => archiveOrder(o.id)}>Archiver</Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </TabsContent>
+
+                  <TabsContent value="history" className="space-y-3 mt-4">
+                    {history.length === 0 && <p className="text-muted-foreground text-center py-12">Aucune commande archivée.</p>}
+                    {history.map(o => (
+                      <Card key={o.id} className="p-5 bg-card border-border opacity-80">
+                        <div className="flex flex-wrap items-start justify-between gap-4">
+                          <div className="flex-1 min-w-[200px]">
+                            <div className="flex items-center gap-3 flex-wrap">
+                              <h3 className="text-lg font-semibold">{o.first_name} {o.last_name}</h3>
+                              <span className="text-xs px-2 py-0.5 rounded-full border border-border text-muted-foreground">Groupe {o.class_group}</span>
+                              {o.product_name && <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">{o.product_name}</span>}
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">Archivée</span>
+                            </div>
+                            {o.more_details && <p className="text-sm text-muted-foreground mt-2 whitespace-pre-wrap">{o.more_details}</p>}
+                            <p className="text-xs text-muted-foreground mt-2">{new Date(o.created_at).toLocaleString("fr-CA")}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={() => restoreOrder(o.id)}>Restaurer</Button>
+                            <Button size="sm" variant="destructive" onClick={() => deleteOrderForever(o.id)}>Suppr. définitivement</Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </TabsContent>
+                </Tabs>
+              );
+            })()}
           </TabsContent>
 
           <TabsContent value="products" className="space-y-6 mt-6">
