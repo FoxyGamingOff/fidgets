@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -126,7 +126,6 @@ function Index() {
         <a href="#cart" className="text-sm text-muted-foreground hover:text-primary transition">
           Panier {itemCount > 0 && <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-primary text-primary-foreground">{itemCount}</span>}
         </a>
-        <Link to="/admin" className="text-sm text-muted-foreground hover:text-primary transition">Admin</Link>
       </header>
 
       <main className="container mx-auto px-6 py-16 max-w-6xl">
@@ -236,8 +235,9 @@ function Index() {
                   <Input id="cg" placeholder="Ex: 504" value={form.class_group} onChange={(e) => setForm({ ...form, class_group: e.target.value })} maxLength={40} required />
                 </div>
                 <div>
-                  <Label htmlFor="md">Plus de détails</Label>
-                  <Textarea id="md" placeholder="Couleur préférée, etc." value={form.more_details} onChange={(e) => setForm({ ...form, more_details: e.target.value })} maxLength={500} rows={3} />
+                  <Label htmlFor="md">Plus de détails — précise la taille souhaitée</Label>
+                  <Textarea id="md" placeholder="Ex: taille moyenne, couleur bleue... ⚠️ Plus c'est gros, plus c'est cher !" value={form.more_details} onChange={(e) => setForm({ ...form, more_details: e.target.value })} maxLength={500} rows={3} />
+                  <p className="text-xs text-muted-foreground mt-1">Indique la taille que tu veux (petit / moyen / gros). Plus le fidget est gros, plus il coûte cher.</p>
                 </div>
                 <Button type="submit" disabled={loading || cart.length === 0} className="w-full text-base py-6" style={{ background: "var(--gradient-hero)", color: "oklch(0.97 0.01 300)" }}>
                   {loading ? "Envoi..." : `Confirmer la commande — ${total.toFixed(2)} $`}
