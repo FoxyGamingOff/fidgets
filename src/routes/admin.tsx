@@ -28,6 +28,8 @@ function AdminPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [tiers, setTiers] = useState<BundleTier[]>([]);
+  const [newTier, setNewTier] = useState({ min_qty: "", discount_percent: "" });
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
