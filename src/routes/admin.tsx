@@ -227,6 +227,7 @@ function AdminPage() {
             <TabsTrigger value="orders">Commandes ({orders.length})</TabsTrigger>
             <TabsTrigger value="products">​Description ({products.length})</TabsTrigger>
             <TabsTrigger value="suggestions">Suggestions ({suggestions.length})</TabsTrigger>
+            <TabsTrigger value="bundles">Packs ({tiers.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="orders" className="space-y-3 mt-6">
