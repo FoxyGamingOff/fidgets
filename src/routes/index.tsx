@@ -235,8 +235,9 @@ function Index() {
                   <Input id="cg" placeholder="Ex: 504" value={form.class_group} onChange={(e) => setForm({ ...form, class_group: e.target.value })} maxLength={40} required />
                 </div>
                 <div>
-                  <Label htmlFor="md">Plus de détails</Label>
-                  <Textarea id="md" placeholder="Couleur préférée, etc." value={form.more_details} onChange={(e) => setForm({ ...form, more_details: e.target.value })} maxLength={500} rows={3} />
+                  <Label htmlFor="md">Plus de détails — précise la taille souhaitée</Label>
+                  <Textarea id="md" placeholder="Ex: taille moyenne, couleur bleue... ⚠️ Plus c'est gros, plus c'est cher !" value={form.more_details} onChange={(e) => setForm({ ...form, more_details: e.target.value })} maxLength={500} rows={3} />
+                  <p className="text-xs text-muted-foreground mt-1">Indique la taille que tu veux (petit / moyen / gros). Plus le fidget est gros, plus il coûte cher.</p>
                 </div>
                 <Button type="submit" disabled={loading || cart.length === 0} className="w-full text-base py-6" style={{ background: "var(--gradient-hero)", color: "oklch(0.97 0.01 300)" }}>
                   {loading ? "Envoi..." : `Confirmer la commande — ${total.toFixed(2)} $`}
