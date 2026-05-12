@@ -51,6 +51,7 @@ const suggestionSchema = z.object({
 
 function Index() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [tiers, setTiers] = useState<{ min_qty: number; discount_percent: number }[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [form, setForm] = useState({ first_name: "", last_name: "", class_group: "", more_details: "" });
   const [loading, setLoading] = useState(false);
@@ -64,10 +65,20 @@ function Index() {
     supabase.from("products").select("*").eq("active", true).order("created_at", { ascending: true }).then(({ data }) => {
       setProducts((data as Product[]) ?? []);
     });
+    supabase.from("bundle_tiers").select("min_qty,discount_percent").order("min_qty", { ascending: true }).then(({ data }) => {
+      setTiers((data as { min_qty: number; discount_percent: number }[]) ?? []);
+    });
   }, []);
 
-  const total = useMemo(() => cart.reduce((s, i) => s + effPrice(i.product) * i.qty, 0), [cart]);
+  const subtotal = useMemo(() => cart.reduce((s, i) => s + effPrice(i.product) * i.qty, 0), [cart]);
   const itemCount = useMemo(() => cart.reduce((s, i) => s + i.qty, 0), [cart]);
+  const bundleTier = useMemo(() => {
+    const eligible = tiers.filter(t => itemCount >= t.min_qty);
+    if (eligible.length === 0) return null;
+    return eligible.reduce((best, t) => Number(t.discount_percent) > Number(best.discount_percent) ? t : best);
+  }, [tiers, itemCount]);
+  const bundleDiscount = bundleTier ? subtotal * (Number(bundleTier.discount_percent) / 100) : 0;
+  const total = subtotal - bundleDiscount;
 
   function addToCart(p: Product) {
     setCart((c) => {
