@@ -126,7 +126,6 @@ function Index() {
         <a href="#cart" className="text-sm text-muted-foreground hover:text-primary transition">
           Panier {itemCount > 0 && <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-primary text-primary-foreground">{itemCount}</span>}
         </a>
-        <Link to="/admin" className="text-sm text-muted-foreground hover:text-primary transition">Admin</Link>
       </header>
 
       <main className="container mx-auto px-6 py-16 max-w-6xl">
