@@ -17,7 +17,7 @@ export const Route = createFileRoute("/admin")({
 });
 
 type Order = { id: string; first_name: string; last_name: string; class_group: string; more_details: string | null; status: string; created_at: string; product_name: string | null };
-type Product = { id: string; name: string; price: number; image_url: string | null; description: string | null; active: boolean };
+type Product = { id: string; name: string; price: number; image_url: string | null; description: string | null; active: boolean; discount_percent: number };
 type Suggestion = { id: string; fidget_name: string; description: string | null; submitter_name: string | null; created_at: string };
 
 function AdminPage() {
@@ -134,6 +134,12 @@ function AdminPage() {
     const { error } = await supabase.from("products").delete().eq("id", id);
     if (error) return toast.error(error.message);
     setProducts(products.filter(p => p.id !== id));
+  }
+  async function saveProduct(p: Product, patch: { price?: number; discount_percent?: number }) {
+    const { error } = await supabase.from("products").update(patch).eq("id", p.id);
+    if (error) return toast.error(error.message);
+    setProducts(products.map(x => x.id === p.id ? { ...x, ...patch } : x));
+    toast.success("Mis à jour");
   }
 
   async function removeSuggestion(id: string) {
@@ -278,25 +284,40 @@ function AdminPage() {
             </Card>
 
             <div className="space-y-3">
-              {products.map(p => (
-                <Card key={p.id} className="p-4 bg-card border-border flex items-center gap-4">
+              {products.map(p => {
+                const eff = Number(p.price) * (1 - Number(p.discount_percent || 0) / 100);
+                return (
+                <Card key={p.id} className="p-4 bg-card border-border flex flex-wrap items-center gap-4">
                   <div className="w-16 h-16 rounded bg-muted overflow-hidden shrink-0">
                     {p.image_url && <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />}
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-[180px]">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold">{p.name}</h3>
-                      <span className="text-sm text-primary font-bold">{Number(p.price).toFixed(2)} $</span>
                       {!p.active && <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">Caché</span>}
+                      {Number(p.discount_percent) > 0 && <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">−{Number(p.discount_percent)}% → {eff.toFixed(2)} $</span>}
                     </div>
                     {p.description && <p className="text-xs text-muted-foreground truncate">{p.description}</p>}
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <div>
+                      <Label htmlFor={`pr-${p.id}`} className="text-xs">Prix ($)</Label>
+                      <Input id={`pr-${p.id}`} type="number" step="0.01" min="0" defaultValue={Number(p.price).toFixed(2)} className="h-9 w-24"
+                        onBlur={(e) => { const v = Number(e.target.value); if (!isNaN(v) && v !== Number(p.price)) saveProduct(p, { price: v }); }} />
+                    </div>
+                    <div>
+                      <Label htmlFor={`ds-${p.id}`} className="text-xs">Rabais (%)</Label>
+                      <Input id={`ds-${p.id}`} type="number" step="1" min="0" max="100" defaultValue={Number(p.discount_percent || 0)} className="h-9 w-20"
+                        onBlur={(e) => { const v = Number(e.target.value); if (!isNaN(v) && v !== Number(p.discount_percent)) saveProduct(p, { discount_percent: v }); }} />
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" onClick={() => toggleActive(p)}>{p.active ? "Cacher" : "Activer"}</Button>
                     <Button size="sm" variant="destructive" onClick={() => removeProduct(p.id)}>Suppr.</Button>
                   </div>
                 </Card>
-              ))}
+                );
+              })}
             </div>
           </TabsContent>
 
