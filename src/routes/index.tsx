@@ -101,7 +101,8 @@ function Index() {
     setLoading(true);
 
     const summary = cart.map((i) => `${i.qty}× ${i.product.name} (${(effPrice(i.product) * i.qty).toFixed(2)} $)`).join("\n");
-    const fullDetails = `Panier:\n${summary}\nTotal: ${total.toFixed(2)} $${parsed.data.more_details ? `\n\nNote:\n${parsed.data.more_details}` : ""}`;
+    const bundleLine = bundleTier ? `\nPack ≥${bundleTier.min_qty} items: −${Number(bundleTier.discount_percent)}% (−${bundleDiscount.toFixed(2)} $)` : "";
+    const fullDetails = `Panier:\n${summary}${bundleLine}\nTotal: ${total.toFixed(2)} $${parsed.data.more_details ? `\n\nNote:\n${parsed.data.more_details}` : ""}`;
     const productNames = cart.map((i) => `${i.qty}× ${i.product.name}`).join(", ");
 
     const { error } = await supabase.from("orders").insert({
