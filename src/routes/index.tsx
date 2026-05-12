@@ -27,7 +27,12 @@ type Product = {
   price: number;
   image_url: string | null;
   description: string | null;
+  discount_percent?: number | null;
 };
+
+function effPrice(p: Pick<Product, "price" | "discount_percent">) {
+  return Number(p.price) * (1 - Number(p.discount_percent || 0) / 100);
+}
 
 type CartItem = { product: Product; qty: number };
 
