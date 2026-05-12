@@ -135,6 +135,12 @@ function AdminPage() {
     if (error) return toast.error(error.message);
     setProducts(products.filter(p => p.id !== id));
   }
+  async function saveProduct(p: Product, patch: { price?: number; discount_percent?: number }) {
+    const { error } = await supabase.from("products").update(patch).eq("id", p.id);
+    if (error) return toast.error(error.message);
+    setProducts(products.map(x => x.id === p.id ? { ...x, ...patch } : x));
+    toast.success("Mis à jour");
+  }
 
   async function removeSuggestion(id: string) {
     if (!confirm("Supprimer ?")) return;
