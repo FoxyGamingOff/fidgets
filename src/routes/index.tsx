@@ -165,8 +165,16 @@ function Index() {
                   </div>
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <h3 className="font-semibold">{p.name}</h3>
-                    <span className="font-bold whitespace-nowrap" style={{ background: "var(--gradient-hero)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{Number(p.price).toFixed(2)} $</span>
+                    {Number(p.discount_percent || 0) > 0 ? (
+                      <div className="flex flex-col items-end leading-tight">
+                        <span className="text-xs text-muted-foreground line-through">{Number(p.price).toFixed(2)} $</span>
+                        <span className="font-bold whitespace-nowrap" style={{ background: "var(--gradient-hero)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{effPrice(p).toFixed(2)} $</span>
+                      </div>
+                    ) : (
+                      <span className="font-bold whitespace-nowrap" style={{ background: "var(--gradient-hero)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{Number(p.price).toFixed(2)} $</span>
+                    )}
                   </div>
+                  {Number(p.discount_percent || 0) > 0 && <span className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/20 text-primary mb-1">Rabais −{Number(p.discount_percent)}%</span>}
                   {p.description && <p className="text-sm text-muted-foreground">{p.description}</p>}
                   <Button size="sm" onClick={() => addToCart(p)} className="w-full mt-4" style={{ background: "var(--gradient-hero)", color: "oklch(0.97 0.01 300)" }}>
                     {inCart ? `Ajouter encore (${inCart.qty})` : "Ajouter au panier"}
