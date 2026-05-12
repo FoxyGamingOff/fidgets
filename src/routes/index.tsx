@@ -235,7 +235,13 @@ function Index() {
                           </div>
                         </div>
                       ))}
-                      <div className="border-t border-border pt-2 mt-2 flex justify-between items-center">
+                      {bundleTier && (
+                        <div className="border-t border-border pt-2 mt-2 flex justify-between items-center text-sm">
+                          <span className="text-primary">Pack ≥{bundleTier.min_qty} items (−{Number(bundleTier.discount_percent)}%)</span>
+                          <span className="text-primary">−{bundleDiscount.toFixed(2)} $</span>
+                        </div>
+                      )}
+                      <div className={`${bundleTier ? "" : "border-t border-border pt-2 mt-2"} flex justify-between items-center`}>
                         <span className="text-sm text-muted-foreground">Total</span>
                         <span className="text-xl font-bold" style={{ background: "var(--gradient-hero)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                           {total.toFixed(2)} $
