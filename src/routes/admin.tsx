@@ -385,6 +385,7 @@ function AdminPage() {
               ))}
             </div>
           </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
