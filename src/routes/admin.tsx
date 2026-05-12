@@ -55,14 +55,34 @@ function AdminPage() {
   useEffect(() => { if (isAdmin) loadAll(); }, [isAdmin]);
 
   async function loadAll() {
-    const [o, p, s] = await Promise.all([
+    const [o, p, s, t] = await Promise.all([
       supabase.from("orders").select("*").order("created_at", { ascending: false }),
       supabase.from("products").select("*").order("created_at", { ascending: true }),
       supabase.from("suggestions").select("*").order("created_at", { ascending: false }),
+      supabase.from("bundle_tiers").select("*").order("min_qty", { ascending: true }),
     ]);
     setOrders((o.data as Order[]) ?? []);
     setProducts((p.data as Product[]) ?? []);
     setSuggestions((s.data as Suggestion[]) ?? []);
+    setTiers((t.data as BundleTier[]) ?? []);
+  }
+
+  async function addTier(e: React.FormEvent) {
+    e.preventDefault();
+    const mq = Number(newTier.min_qty); const dp = Number(newTier.discount_percent);
+    if (!Number.isInteger(mq) || mq < 2) return toast.error("Quantité min ≥ 2");
+    if (isNaN(dp) || dp < 0 || dp > 100) return toast.error("Rabais 0–100");
+    const { error } = await supabase.from("bundle_tiers").insert({ min_qty: mq, discount_percent: dp });
+    if (error) return toast.error(error.message);
+    toast.success("Pack ajouté");
+    setNewTier({ min_qty: "", discount_percent: "" });
+    loadAll();
+  }
+  async function removeTier(id: string) {
+    if (!confirm("Supprimer ce pack ?")) return;
+    const { error } = await supabase.from("bundle_tiers").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    setTiers(tiers.filter(t => t.id !== id));
   }
 
   async function handleAuth(e: React.FormEvent) {
