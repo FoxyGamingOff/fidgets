@@ -163,7 +163,18 @@ function Index() {
 
         {/* Catalog */}
         <section className="mb-20">
-          <h2 className="text-2xl font-bold mb-6">Catalogue</h2>
+          <div className="flex items-end justify-between mb-6 gap-4 flex-wrap">
+            <h2 className="text-2xl font-bold">Catalogue</h2>
+            {tiers.length > 0 && (
+              <div className="flex gap-2 flex-wrap">
+                {tiers.slice().sort((a, b) => a.min_qty - b.min_qty).map(t => (
+                  <span key={t.min_qty} className="text-xs px-2 py-1 rounded-full bg-primary/15 text-primary border border-primary/30">
+                    ≥{t.min_qty} items → −{Number(t.discount_percent)}%
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
           {products.length === 0 && (
             <p className="text-muted-foreground text-sm">Aucun fidget pour l'instant.</p>
           )}
