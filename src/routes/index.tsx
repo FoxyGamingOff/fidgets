@@ -214,7 +214,7 @@ function Index() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{i.product.name}</p>
-                            <p className="text-xs text-muted-foreground">{Number(i.product.price).toFixed(2)} $ × {i.qty}</p>
+                            <p className="text-xs text-muted-foreground">{effPrice(i.product).toFixed(2)} $ × {i.qty}{Number(i.product.discount_percent || 0) > 0 && <span className="ml-1 text-primary">(−{Number(i.product.discount_percent)}%)</span>}</p>
                           </div>
                           <div className="flex items-center gap-1">
                             <Button type="button" size="sm" variant="outline" className="h-7 w-7 p-0" onClick={() => setQty(i.product.id, i.qty - 1)}>−</Button>
