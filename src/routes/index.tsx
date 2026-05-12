@@ -66,7 +66,7 @@ function Index() {
     });
   }, []);
 
-  const total = useMemo(() => cart.reduce((s, i) => s + Number(i.product.price) * i.qty, 0), [cart]);
+  const total = useMemo(() => cart.reduce((s, i) => s + effPrice(i.product) * i.qty, 0), [cart]);
   const itemCount = useMemo(() => cart.reduce((s, i) => s + i.qty, 0), [cart]);
 
   function addToCart(p: Product) {
