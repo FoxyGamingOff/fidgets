@@ -17,7 +17,7 @@ export const Route = createFileRoute("/admin")({
 });
 
 type Order = { id: string; first_name: string; last_name: string; class_group: string; more_details: string | null; status: string; created_at: string; product_name: string | null };
-type Product = { id: string; name: string; price: number; image_url: string | null; description: string | null; active: boolean };
+type Product = { id: string; name: string; price: number; image_url: string | null; description: string | null; active: boolean; discount_percent: number };
 type Suggestion = { id: string; fidget_name: string; description: string | null; submitter_name: string | null; created_at: string };
 
 function AdminPage() {
