@@ -19,6 +19,7 @@ export const Route = createFileRoute("/admin")({
 type Order = { id: string; first_name: string; last_name: string; class_group: string; more_details: string | null; status: string; created_at: string; product_name: string | null };
 type Product = { id: string; name: string; price: number; image_url: string | null; description: string | null; active: boolean; discount_percent: number };
 type Suggestion = { id: string; fidget_name: string; description: string | null; submitter_name: string | null; created_at: string };
+type BundleTier = { id: string; min_qty: number; discount_percent: number };
 
 function AdminPage() {
   const [session, setSession] = useState<Session | null>(null);
@@ -27,6 +28,8 @@ function AdminPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [tiers, setTiers] = useState<BundleTier[]>([]);
+  const [newTier, setNewTier] = useState({ min_qty: "", discount_percent: "" });
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -52,14 +55,34 @@ function AdminPage() {
   useEffect(() => { if (isAdmin) loadAll(); }, [isAdmin]);
 
   async function loadAll() {
-    const [o, p, s] = await Promise.all([
+    const [o, p, s, t] = await Promise.all([
       supabase.from("orders").select("*").order("created_at", { ascending: false }),
       supabase.from("products").select("*").order("created_at", { ascending: true }),
       supabase.from("suggestions").select("*").order("created_at", { ascending: false }),
+      supabase.from("bundle_tiers").select("*").order("min_qty", { ascending: true }),
     ]);
     setOrders((o.data as Order[]) ?? []);
     setProducts((p.data as Product[]) ?? []);
     setSuggestions((s.data as Suggestion[]) ?? []);
+    setTiers((t.data as BundleTier[]) ?? []);
+  }
+
+  async function addTier(e: React.FormEvent) {
+    e.preventDefault();
+    const mq = Number(newTier.min_qty); const dp = Number(newTier.discount_percent);
+    if (!Number.isInteger(mq) || mq < 2) return toast.error("Quantité min ≥ 2");
+    if (isNaN(dp) || dp < 0 || dp > 100) return toast.error("Rabais 0–100");
+    const { error } = await supabase.from("bundle_tiers").insert({ min_qty: mq, discount_percent: dp });
+    if (error) return toast.error(error.message);
+    toast.success("Pack ajouté");
+    setNewTier({ min_qty: "", discount_percent: "" });
+    loadAll();
+  }
+  async function removeTier(id: string) {
+    if (!confirm("Supprimer ce pack ?")) return;
+    const { error } = await supabase.from("bundle_tiers").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    setTiers(tiers.filter(t => t.id !== id));
   }
 
   async function handleAuth(e: React.FormEvent) {
@@ -204,6 +227,7 @@ function AdminPage() {
             <TabsTrigger value="orders">Commandes ({orders.length})</TabsTrigger>
             <TabsTrigger value="products">​Description ({products.length})</TabsTrigger>
             <TabsTrigger value="suggestions">Suggestions ({suggestions.length})</TabsTrigger>
+            <TabsTrigger value="bundles">Packs ({tiers.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="orders" className="space-y-3 mt-6">
@@ -337,6 +361,29 @@ function AdminPage() {
                 </div>
               </Card>
             ))}
+          </TabsContent>
+
+          <TabsContent value="bundles" className="space-y-6 mt-6">
+            <Card className="p-6 bg-card border-border">
+              <h2 className="text-lg font-semibold mb-1">Ajouter un pack</h2>
+              <p className="text-sm text-muted-foreground mb-4">Quand le client a au moins X items dans son panier, le rabais s'applique au total. Le meilleur pack atteint l'emporte.</p>
+              <form onSubmit={addTier} className="grid sm:grid-cols-3 gap-4">
+                <div><Label htmlFor="bq">Quantité min</Label><Input id="bq" type="number" min="2" step="1" value={newTier.min_qty} onChange={(e) => setNewTier({ ...newTier, min_qty: e.target.value })} required /></div>
+                <div><Label htmlFor="bd">Rabais (%)</Label><Input id="bd" type="number" min="0" max="100" step="1" value={newTier.discount_percent} onChange={(e) => setNewTier({ ...newTier, discount_percent: e.target.value })} required /></div>
+                <div className="flex items-end"><Button type="submit" style={{ background: "var(--gradient-hero)", color: "oklch(0.97 0.01 300)" }}>Ajouter</Button></div>
+              </form>
+            </Card>
+            <div className="space-y-3">
+              {tiers.length === 0 && <p className="text-muted-foreground text-center py-8">Aucun pack défini.</p>}
+              {tiers.map(t => (
+                <Card key={t.id} className="p-4 bg-card border-border flex items-center justify-between gap-4">
+                  <div>
+                    <p className="font-semibold">À partir de {t.min_qty} items → −{Number(t.discount_percent)}%</p>
+                  </div>
+                  <Button size="sm" variant="destructive" onClick={() => removeTier(t.id)}>Suppr.</Button>
+                </Card>
+              ))}
+            </div>
           </TabsContent>
         </Tabs>
       </main>

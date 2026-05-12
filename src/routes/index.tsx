@@ -51,6 +51,7 @@ const suggestionSchema = z.object({
 
 function Index() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [tiers, setTiers] = useState<{ min_qty: number; discount_percent: number }[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [form, setForm] = useState({ first_name: "", last_name: "", class_group: "", more_details: "" });
   const [loading, setLoading] = useState(false);
@@ -64,10 +65,20 @@ function Index() {
     supabase.from("products").select("*").eq("active", true).order("created_at", { ascending: true }).then(({ data }) => {
       setProducts((data as Product[]) ?? []);
     });
+    supabase.from("bundle_tiers").select("min_qty,discount_percent").order("min_qty", { ascending: true }).then(({ data }) => {
+      setTiers((data as { min_qty: number; discount_percent: number }[]) ?? []);
+    });
   }, []);
 
-  const total = useMemo(() => cart.reduce((s, i) => s + effPrice(i.product) * i.qty, 0), [cart]);
+  const subtotal = useMemo(() => cart.reduce((s, i) => s + effPrice(i.product) * i.qty, 0), [cart]);
   const itemCount = useMemo(() => cart.reduce((s, i) => s + i.qty, 0), [cart]);
+  const bundleTier = useMemo(() => {
+    const eligible = tiers.filter(t => itemCount >= t.min_qty);
+    if (eligible.length === 0) return null;
+    return eligible.reduce((best, t) => Number(t.discount_percent) > Number(best.discount_percent) ? t : best);
+  }, [tiers, itemCount]);
+  const bundleDiscount = bundleTier ? subtotal * (Number(bundleTier.discount_percent) / 100) : 0;
+  const total = subtotal - bundleDiscount;
 
   function addToCart(p: Product) {
     setCart((c) => {
@@ -90,7 +101,8 @@ function Index() {
     setLoading(true);
 
     const summary = cart.map((i) => `${i.qty}× ${i.product.name} (${(effPrice(i.product) * i.qty).toFixed(2)} $)`).join("\n");
-    const fullDetails = `Panier:\n${summary}\nTotal: ${total.toFixed(2)} $${parsed.data.more_details ? `\n\nNote:\n${parsed.data.more_details}` : ""}`;
+    const bundleLine = bundleTier ? `\nPack ≥${bundleTier.min_qty} items: −${Number(bundleTier.discount_percent)}% (−${bundleDiscount.toFixed(2)} $)` : "";
+    const fullDetails = `Panier:\n${summary}${bundleLine}\nTotal: ${total.toFixed(2)} $${parsed.data.more_details ? `\n\nNote:\n${parsed.data.more_details}` : ""}`;
     const productNames = cart.map((i) => `${i.qty}× ${i.product.name}`).join(", ");
 
     const { error } = await supabase.from("orders").insert({
@@ -151,7 +163,18 @@ function Index() {
 
         {/* Catalog */}
         <section className="mb-20">
-          <h2 className="text-2xl font-bold mb-6">Catalogue</h2>
+          <div className="flex items-end justify-between mb-6 gap-4 flex-wrap">
+            <h2 className="text-2xl font-bold">Catalogue</h2>
+            {tiers.length > 0 && (
+              <div className="flex gap-2 flex-wrap">
+                {tiers.slice().sort((a, b) => a.min_qty - b.min_qty).map(t => (
+                  <span key={t.min_qty} className="text-xs px-2 py-1 rounded-full bg-primary/15 text-primary border border-primary/30">
+                    ≥{t.min_qty} items → −{Number(t.discount_percent)}%
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
           {products.length === 0 && (
             <p className="text-muted-foreground text-sm">Aucun fidget pour l'instant.</p>
           )}
@@ -223,7 +246,13 @@ function Index() {
                           </div>
                         </div>
                       ))}
-                      <div className="border-t border-border pt-2 mt-2 flex justify-between items-center">
+                      {bundleTier && (
+                        <div className="border-t border-border pt-2 mt-2 flex justify-between items-center text-sm">
+                          <span className="text-primary">Pack ≥{bundleTier.min_qty} items (−{Number(bundleTier.discount_percent)}%)</span>
+                          <span className="text-primary">−{bundleDiscount.toFixed(2)} $</span>
+                        </div>
+                      )}
+                      <div className={`${bundleTier ? "" : "border-t border-border pt-2 mt-2"} flex justify-between items-center`}>
                         <span className="text-sm text-muted-foreground">Total</span>
                         <span className="text-xl font-bold" style={{ background: "var(--gradient-hero)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                           {total.toFixed(2)} $

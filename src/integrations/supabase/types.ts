@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      bundle_tiers: {
+        Row: {
+          created_at: string
+          discount_percent: number
+          id: string
+          min_qty: number
+        }
+        Insert: {
+          created_at?: string
+          discount_percent: number
+          id?: string
+          min_qty: number
+        }
+        Update: {
+          created_at?: string
+          discount_percent?: number
+          id?: string
+          min_qty?: number
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           class_group: string
