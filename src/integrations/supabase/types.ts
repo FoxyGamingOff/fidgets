@@ -35,6 +35,30 @@ export type Database = {
         }
         Relationships: []
       }
+      coupons: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          discount_percent: number
+          id: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          discount_percent: number
+          id?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          discount_percent?: number
+          id?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           class_group: string
@@ -82,32 +106,41 @@ export type Database = {
       products: {
         Row: {
           active: boolean
+          coming_soon: boolean
           created_at: string
           description: string | null
           discount_percent: number
           id: string
           image_url: string | null
+          is_star: boolean
           name: string
+          preorder_enabled: boolean
           price: number
         }
         Insert: {
           active?: boolean
+          coming_soon?: boolean
           created_at?: string
           description?: string | null
           discount_percent?: number
           id?: string
           image_url?: string | null
+          is_star?: boolean
           name: string
+          preorder_enabled?: boolean
           price?: number
         }
         Update: {
           active?: boolean
+          coming_soon?: boolean
           created_at?: string
           description?: string | null
           discount_percent?: number
           id?: string
           image_url?: string | null
+          is_star?: boolean
           name?: string
+          preorder_enabled?: boolean
           price?: number
         }
         Relationships: []
@@ -118,6 +151,7 @@ export type Database = {
           description: string | null
           fidget_name: string
           id: string
+          image_url: string | null
           submitter_name: string | null
         }
         Insert: {
@@ -125,6 +159,7 @@ export type Database = {
           description?: string | null
           fidget_name: string
           id?: string
+          image_url?: string | null
           submitter_name?: string | null
         }
         Update: {
@@ -132,6 +167,7 @@ export type Database = {
           description?: string | null
           fidget_name?: string
           id?: string
+          image_url?: string | null
           submitter_name?: string | null
         }
         Relationships: []
