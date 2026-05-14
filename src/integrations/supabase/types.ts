@@ -41,28 +41,42 @@ export type Database = {
           code: string
           created_at: string
           discount_percent: number
+          expires_at: string | null
           id: string
+          max_uses: number | null
+          show_on_home: boolean
+          uses_count: number
         }
         Insert: {
           active?: boolean
           code: string
           created_at?: string
           discount_percent: number
+          expires_at?: string | null
           id?: string
+          max_uses?: number | null
+          show_on_home?: boolean
+          uses_count?: number
         }
         Update: {
           active?: boolean
           code?: string
           created_at?: string
           discount_percent?: number
+          expires_at?: string | null
           id?: string
+          max_uses?: number | null
+          show_on_home?: boolean
+          uses_count?: number
         }
         Relationships: []
       }
       orders: {
         Row: {
           class_group: string
+          coupon_code: string | null
           created_at: string
+          delivery_note: string | null
           first_name: string
           id: string
           last_name: string
@@ -70,10 +84,13 @@ export type Database = {
           product_id: string | null
           product_name: string | null
           status: string
+          user_id: string | null
         }
         Insert: {
           class_group: string
+          coupon_code?: string | null
           created_at?: string
+          delivery_note?: string | null
           first_name: string
           id?: string
           last_name: string
@@ -81,10 +98,13 @@ export type Database = {
           product_id?: string | null
           product_name?: string | null
           status?: string
+          user_id?: string | null
         }
         Update: {
           class_group?: string
+          coupon_code?: string | null
           created_at?: string
+          delivery_note?: string | null
           first_name?: string
           id?: string
           last_name?: string
@@ -92,6 +112,7 @@ export type Database = {
           product_id?: string | null
           product_name?: string | null
           status?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -114,8 +135,11 @@ export type Database = {
           image_url: string | null
           is_star: boolean
           name: string
+          position: number
           preorder_enabled: boolean
           price: number
+          stock_qty: number | null
+          stock_status: string
         }
         Insert: {
           active?: boolean
@@ -127,8 +151,11 @@ export type Database = {
           image_url?: string | null
           is_star?: boolean
           name: string
+          position?: number
           preorder_enabled?: boolean
           price?: number
+          stock_qty?: number | null
+          stock_status?: string
         }
         Update: {
           active?: boolean
@@ -140,8 +167,35 @@ export type Database = {
           image_url?: string | null
           is_star?: boolean
           name?: string
+          position?: number
           preorder_enabled?: boolean
           price?: number
+          stock_qty?: number | null
+          stock_status?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          class_group: string
+          created_at: string
+          first_name: string
+          id: string
+          last_name: string
+        }
+        Insert: {
+          class_group: string
+          created_at?: string
+          first_name: string
+          id: string
+          last_name: string
+        }
+        Update: {
+          class_group?: string
+          created_at?: string
+          first_name?: string
+          id?: string
+          last_name?: string
         }
         Relationships: []
       }
@@ -205,6 +259,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_coupon_use: { Args: { _code: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"
